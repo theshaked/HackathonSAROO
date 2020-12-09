@@ -23,63 +23,40 @@ class Application extends React.Component {
             zoom: this.state.zoom
         });
 
-        map.on('move', () => {
-            this.setState({
-            lng: map.getCenter().lng.toFixed(4),
-            lat: map.getCenter().lat.toFixed(4),
-            zoom: map.getZoom().toFixed(2)
+        var url = 'https://wanderdrone.appspot.com/';
+        map.on('load', function () {
+            var request = new XMLHttpRequest();
+            window.setInterval(function () {
+// make a GET request to parse the GeoJSON at the url
+                request.open('GET', url, true);
+                request.onload = function () {
+                    if (this.status >= 200 && this.status < 400) {
+// retrieve the JSON from the response
+                        var json = JSON.parse(this.response);
+
+// update the drone symbol's location on the map
+                        map.getSource('drone').setData(json);
+
+// fly the map to the drone's current location
+                        map.flyTo({
+                            center: json.geometry.coordinates,
+                            speed: 0.5
+                        });
+                    }
+                };
+                request.send();
+            }, 2000);
+
+            map.addSource('drone', { type: 'geojson', data: url });
+            map.addLayer({
+                'id': 'drone',
+                'type': 'symbol',
+                'source': 'drone',
+                'layout': {
+                    'icon-image': 'airport-15'
+                }
             });
         });
-
-        map.on('load', function () {
-            // Add an image to use as a custom marker
-            map.loadImage(
-            'https://cdn4.iconfinder.com/data/icons/ionicons/512/icon-plane-512.png',
-            function (error, image) {
-            if (error) throw error;
-            map.addImage('custom-marker', image ,10);
-            // Add a GeoJSON source with 2 points
-            map.addSource('points', {
-            'type': 'geojson',
-            'data': {
-            'type': 'FeatureCollection',
-            'features': [
-            {
-            // feature for Mapbox DC
-            'type': 'Feature',
-            'geometry': {
-            'type': 'Point',
-            'coordinates': [35,33]
-            },
-            'properties': {
-            'title': 'ראשנ סוטמ'
-            }
-            }
-            ]
-            }
-            });
-             
-            // Add a symbol layer
-            map.addLayer({
-            'id': 'points',
-            'type': 'symbol',
-            'source': 'points',
-            'layout': {
-            'icon-image': 'custom-marker',
-            'icon-size': 0.07,
-            // get the title name from the source's "title" property
-            'text-field': ['get', 'title'],
-            'text-font': [
-            'Open Sans Semibold',
-            'Arial Unicode MS Bold'
-            ],
-            'text-offset': [0, 1.25],
-            'text-anchor': 'top'
-            }
-            });
-            }
-            );
-            });
     }
 
     render() {
