@@ -30,7 +30,7 @@ class Application extends React.Component {
             zoom: map.getZoom().toFixed(2)
             });
         });
-
+        var plane;
         map.on('load', function () {
             // Add an image to use as a custom marker
             map.loadImage(
@@ -39,7 +39,7 @@ class Application extends React.Component {
             if (error) throw error;
             map.addImage('custom-marker', image ,10);
             // Add a GeoJSON source with 2 points
-            map.addSource('points', {
+            plane = map.addSource('points', {
             'type': 'geojson',
             'data': {
             'type': 'FeatureCollection',
